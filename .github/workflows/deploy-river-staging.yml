@@ -81,6 +81,72 @@ jobs:
           p.write_text(s, encoding='utf-8')
           PY
 
+      - name: Apply LUME v2.4 Mobile Polish
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          p = Path('staging/river-hotel/index.html')
+          s = p.read_text(encoding='utf-8')
+          s = s.replace('Real Hospitality Demo v2.3', 'Real Hospitality Demo v2.4')
+
+          mobile_css = r'''
+          /* LUME v2.4 Mobile Polish */
+          @media(max-width:759px){
+            html{scroll-padding-top:64px}
+            body{overflow-x:hidden}
+            .hero{
+              min-height:70svh;
+              background:
+                linear-gradient(180deg,rgba(255,250,246,.22) 0%,rgba(255,250,246,.58) 52%,rgba(255,250,246,.94) 100%),
+                url('assets/lume-hero.webp') 64% center/cover no-repeat !important;
+            }
+            .hero-inner{padding:92px 18px 30px}
+            .hero h1{font-size:clamp(38px,13vw,54px);line-height:1;letter-spacing:.045em;margin-bottom:10px}
+            .hero p{font-size:17px;line-height:1.5;margin-bottom:14px;max-width:92%}
+            .hero small{font-size:12px;line-height:1.6;margin-bottom:22px;max-width:92%}
+            .cta{min-height:46px;padding:12px 17px;font-size:13px}
+            .section{padding:30px 16px 58px}
+            .section-head{margin-bottom:22px;padding-top:16px;gap:12px}
+            .section-head h2{font-size:28px}
+            .back{min-height:44px;display:inline-flex;align-items:center}
+            .quick{gap:9px;margin:22px 0}
+            .quick a{min-height:80px;padding:14px;border-radius:16px}
+            .quick b{font-size:15px}
+            .quick span{font-size:10.5px;line-height:1.45}
+            .panel{padding:18px;border-radius:18px}
+            .split{gap:12px}
+            .split>.photo-block img{min-height:210px;max-height:270px}
+            .photo-block{margin-top:18px;border-radius:18px}
+            .photo-block img{min-height:190px;max-height:260px}
+            .photo-block figcaption{padding:8px 11px;line-height:1.45}
+            .city-photo img{min-height:180px!important;max-height:230px!important}
+            .feature-row{gap:10px}
+            .feature{padding:16px;border-radius:16px}
+            .city-grid{gap:10px;margin-top:16px}
+            .city-card{padding:16px;border-radius:16px}
+            .info-grid{gap:8px;margin-top:14px}
+            .info{display:grid;gap:5px;padding:12px 0}
+            .info span{text-align:left;font-size:12px}
+            .row{padding:14px;gap:10px}
+            .row span{font-size:11.5px}
+            .action-row{gap:8px;margin-top:14px}
+            .action-btn{min-height:44px;padding:11px 14px;font-size:12px}
+            .lang-float{top:max(8px,env(safe-area-inset-top));right:8px;gap:2px;padding:3px}
+            .lang-btn{min-height:38px;min-width:40px;padding:8px 9px}
+            .toast{bottom:max(18px,env(safe-area-inset-bottom));max-width:calc(100vw - 32px);text-align:center}
+          }
+          @media(max-width:430px){
+            .row{flex-direction:column;align-items:flex-start}
+            .row span{text-align:left}
+            .action-row .action-btn{flex:1 1 calc(50% - 4px)}
+          }
+          '''
+          s = s.replace('</style>', mobile_css + '</style>', 1)
+          p.write_text(s, encoding='utf-8')
+          PY
+
       - name: Static QA
         shell: bash
         run: |
@@ -96,7 +162,10 @@ jobs:
             'assets/lume-city.webp',
           ]
           checks = {
-            'v2.3 title': 'Real Hospitality Demo v2.3' in s,
+            'v2.4 title': 'Real Hospitality Demo v2.4' in s,
+            'mobile polish marker': 'LUME v2.4 Mobile Polish' in s,
+            'viewport meta': 'width=device-width' in s,
+            '44px touch targets': 'min-height:44px' in s,
             'selected assets referenced': all(a in s for a in expected_assets),
             'selected asset files exist': all((root / a).exists() for a in expected_assets),
             'no Pexels placeholders': 'images.pexels.com' not in s,
