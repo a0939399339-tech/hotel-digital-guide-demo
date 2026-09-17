@@ -27,6 +27,39 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Apply LUME bright clean theme
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('staging/river-hotel/index.html')
+          s = p.read_text()
+          replacements = {
+            'content="#f4f1eb"': 'content="#fbfcfd"',
+            '--bg:#f4f1eb;--surface:#fffdf9;--ink:#1f2d3d;--text:#333941;--muted:#757b82;--line:#ddd7ce;--accent:#345b72;--accent-soft:#e8eff2;--warm:#b59b78;--shadow:0 16px 50px rgba(31,45,61,.08);': '--bg:#fbfcfd;--surface:#ffffff;--ink:#29414f;--text:#49575f;--muted:#7f8d95;--line:#e7ecef;--accent:#6f9fb4;--accent-soft:#eff7f9;--warm:#cdbb9e;--shadow:0 14px 36px rgba(52,84,98,.06);',
+            '.section{padding:30px 18px 64px}': '.section{padding:38px 18px 72px}',
+            '.section+.section{border-top:1px solid var(--line)}': '.section+.section{border-top:1px solid rgba(111,159,180,.12)}',
+            '.hero{min-height:94svh;display:flex;align-items:flex-end;position:relative;color:white;background:linear-gradient(145deg,#273945 0%,#405968 48%,#b7a58d 100%)}': '.hero{min-height:82svh;display:flex;align-items:flex-end;position:relative;color:var(--ink);background:radial-gradient(circle at 76% 24%,rgba(255,255,255,.95) 0 13%,transparent 33%),linear-gradient(145deg,#eef7fa 0%,#e3f0f4 46%,#f5f1e9 100%)}',
+            '.hero:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(16,25,32,.12) 20%,rgba(16,25,32,.72) 100%)}': '.hero:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.06) 0%,rgba(255,255,255,.26) 100%)}',
+            '.hero .eyebrow{color:#dbe8ec}': '.hero .eyebrow{color:#5f8fa3}',
+            '.hero h1{color:#fff;font-size:clamp(46px,10vw,86px);letter-spacing:.06em;margin-bottom:12px}': '.hero h1{color:#223844;font-size:clamp(46px,10vw,86px);letter-spacing:.06em;margin-bottom:12px}',
+            '.hero p{max-width:580px;font:20px/1.55 var(--serif);margin:0 0 22px}': '.hero p{max-width:580px;font:20px/1.55 var(--serif);margin:0 0 18px;color:#365764}',
+            '.hero small{display:block;max-width:620px;color:rgba(255,255,255,.78);line-height:1.7;margin-bottom:28px}': '.hero small{display:block;max-width:620px;color:#73828a;line-height:1.7;margin-bottom:28px}',
+            '.cta{display:inline-flex;align-items:center;gap:10px;background:#fff;color:var(--ink);padding:13px 17px;border-radius:999px;font-size:13px;box-shadow:var(--shadow)}': '.cta{display:inline-flex;align-items:center;gap:10px;background:#fff;color:#355766;padding:13px 18px;border:1px solid rgba(111,159,180,.22);border-radius:999px;font-size:13px;box-shadow:var(--shadow)}',
+            '.quick a{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;min-height:94px;transition:.2s transform,.2s box-shadow}': '.quick a{background:rgba(255,255,255,.96);border:1px solid rgba(111,159,180,.14);border-radius:18px;padding:18px;min-height:94px;transition:.2s transform,.2s box-shadow}',
+            '.panel{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:20px}': '.panel{background:#fff;border:1px solid rgba(111,159,180,.14);border-radius:22px;padding:22px;box-shadow:0 8px 26px rgba(52,84,98,.035)}',
+            '.visual{background:linear-gradient(145deg,#eef1f2,#dfe7e9);min-height:250px;border-radius:18px;display:grid;place-items:center;position:relative;overflow:hidden}': '.visual{background:linear-gradient(145deg,#fbfdfe,#eaf3f6);min-height:250px;border-radius:20px;display:grid;place-items:center;position:relative;overflow:hidden}',
+            '.feature{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px}': '.feature{background:#fff;border:1px solid rgba(111,159,180,.13);border-radius:18px;padding:20px}',
+            '.notice{background:var(--accent-soft);border-radius:14px;padding:13px 15px;font-size:12px;line-height:1.65;color:#526472;margin-top:18px}': '.notice{background:var(--accent-soft);border-radius:16px;padding:14px 16px;font-size:12px;line-height:1.65;color:#5f7782;margin-top:18px}',
+            '.list{background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden}': '.list{background:#fff;border:1px solid rgba(111,159,180,.14);border-radius:18px;overflow:hidden}',
+            '.city-card{background:linear-gradient(145deg,#f9f7f3,#ebe7df);border:1px solid var(--line);border-radius:16px;padding:18px}': '.city-card{background:linear-gradient(145deg,#ffffff,#f3f8fa);border:1px solid rgba(111,159,180,.13);border-radius:18px;padding:20px}',
+            '@media(min-width:760px){.section{padding:52px 36px 82px}': '@media(min-width:760px){.section{padding:62px 36px 94px}'
+          }
+          for old, new in replacements.items():
+              s = s.replace(old, new)
+          p.write_text(s)
+          PY
+
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
 
