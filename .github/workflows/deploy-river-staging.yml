@@ -27,6 +27,105 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Build LUME v2.3 real hospitality demo
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          p = Path('staging/river-hotel/index.html')
+          s = p.read_text(encoding='utf-8')
+          s = s.replace('<title>LUME HOTEL — Digital Guest Guide Demo</title>', '<title>LUME HOTEL — Real Hospitality Demo v2.3</title>')
+
+          css = r'''
+          .photo-block{margin:24px 0 0;border-radius:22px;overflow:hidden;background:#f7eee7;border:1px solid rgba(201,122,61,.12);box-shadow:0 12px 34px rgba(132,88,54,.055)}
+          .photo-block img{display:block;width:100%;height:100%;min-height:260px;max-height:520px;object-fit:cover}
+          .photo-block figcaption{padding:10px 13px;background:rgba(255,255,255,.96);font-size:10px;letter-spacing:.08em;color:var(--muted)}
+          .split>.photo-block{margin:0;min-height:100%}.split>.photo-block img{height:100%;min-height:320px}
+          .lang-float{position:fixed;top:max(12px,env(safe-area-inset-top));right:12px;z-index:20;display:flex;gap:4px;padding:4px;background:rgba(255,255,255,.88);backdrop-filter:blur(14px);border:1px solid rgba(201,122,61,.16);border-radius:999px;box-shadow:0 7px 24px rgba(132,88,54,.08)}
+          .lang-btn{border:0;background:transparent;color:var(--muted);border-radius:999px;padding:7px 10px;font-size:11px;cursor:pointer}.lang-btn.active{background:var(--accent-soft);color:var(--accent);font-weight:600}
+          .action-row{display:flex;flex-wrap:wrap;gap:9px;margin-top:18px}.action-btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:1px solid rgba(201,122,61,.20);background:#fff;color:#9f5d2d;border-radius:999px;padding:10px 13px;font-size:12px;cursor:pointer}.action-btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+          .city-card .action-btn{margin-top:12px}.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,14px);background:#4a392f;color:#fff;padding:10px 14px;border-radius:999px;font-size:12px;opacity:0;pointer-events:none;transition:.22s;z-index:30;box-shadow:0 10px 30px rgba(0,0,0,.16)}.toast.show{opacity:1;transform:translate(-50%,0)}
+          @media(max-width:759px){.split>.photo-block img{min-height:240px;max-height:330px}.photo-block img{min-height:220px}.lang-float{right:10px}.section-head{padding-top:22px}}
+          '''
+          s = s.replace('</style>', css + '</style>', 1)
+          s = s.replace('<body>', '<body><nav class="lang-float" aria-label="Language"><button class="lang-btn active" type="button" data-lang="zh">中文</button><button class="lang-btn" type="button" data-lang="en">EN</button></nav>', 1)
+          s = s.replace('<div class="lang">中文　EN　日本語</div>', '')
+
+          room_photo = '<figure class="photo-block"><img src="https://images.pexels.com/photos/37734643/pexels-photo-37734643.jpeg?auto=compress&cs=tinysrgb&w=1600" alt="明亮、合理坪數的城市型商旅客房示意" loading="lazy" decoding="async"><figcaption data-zh="標準商旅客房示意" data-en="Standard business-room reference">標準商旅客房示意</figcaption></figure>'
+          s = re.sub(r'<div class="visual" aria-label="標準商旅客房配置示意">.*?<div class="caption">STANDARD BUSINESS ROOM</div></div>', room_photo, s, count=1, flags=re.S)
+
+          breakfast_photo = '<figure class="photo-block"><img src="https://images.pexels.com/photos/4916557/pexels-photo-4916557.jpeg?auto=compress&cs=tinysrgb&w=1600" alt="明亮簡潔的飯店早餐區示意" loading="lazy" decoding="async"><figcaption data-zh="早餐空間示意" data-en="Breakfast-space reference">早餐空間示意</figcaption></figure>'
+          marker = '<section class="section" id="breakfast">'
+          head, tail = s.split(marker, 1)
+          breakfast_section, rest = tail.split('</section>', 1)
+          breakfast_section = breakfast_section.replace('<div class="info-grid">', breakfast_photo + '<div class="info-grid">', 1)
+          s = head + marker + breakfast_section + '</section>' + rest
+
+          business_photo = '<figure class="photo-block"><img src="https://images.pexels.com/photos/9574509/pexels-photo-9574509.jpeg?auto=compress&cs=tinysrgb&w=1600" alt="簡單電腦與印表設備的商務角落示意" loading="lazy" decoding="async"><figcaption data-zh="小型商務角落示意" data-en="Compact business-corner reference">小型商務角落示意</figcaption></figure>'
+          s = re.sub(r'<div class="visual">.*?<div class="caption">COMPUTER \+ PRINTER</div></div>', business_photo, s, count=1, flags=re.S)
+
+          js = r'''
+          <script id="lume-v23">
+          const TEXT_EN={
+            '在城市停下腳步，剛剛好的休息就從這裡開始。':'A lighter pause in the city starts here.',
+            '位於新莊的城市型旅宿，以乾淨、舒適與安靜為核心，讓每一次停留，都多一分從容。':'A fictional city stay in Xinzhuang, shaped around cleanliness, comfort and a calmer rhythm.',
+            '進入旅宿指南':'Enter guest guide','歡迎來到 LUME HOTEL':'Welcome to LUME HOTEL',
+            '旅途中真正需要的資訊，都整理在這裡。從房間設備、早餐時間到附近散步，一眼就能找到。':'Everything you actually need during your stay, from room essentials and breakfast hours to nearby places, in one place.',
+            '你的房間':'Your room','設備 / 備品 / 房卡':'Amenities / essentials / key card','早餐':'Breakfast','商務中心':'Business corner','基本辦公支援':'Basic work support','附近走走':'Around the neighborhood','新莊在地散步':'Local Xinzhuang ideas','連線資訊':'Connection info','住宿須知':'Stay info','入住 / 退房':'Check-in / check-out','旅人筆記':'Journal','城市片刻':'City moments','聯絡櫃檯':'Front desk','需要協助':'Need help',
+            '← 返回指南':'← Back to guide','回到房間後，最重要的是簡單、舒服、沒有負擔。明亮俐落的空間配置，搭配舒適床鋪與實用設備，讓每一次停留都更自在。':'A room should feel simple, comfortable and easy. Bright, practical details make it easy to rest or get a little work done.',
+            '實用，才是商旅的核心。':'Practical comfort comes first.','標準床鋪、工作桌、電視、空調與基本備品，讓休息與簡單工作都能自然切換。':'A comfortable bed, work desk, TV, climate control and everyday essentials make it easy to switch between rest and work.',
+            '工作空間':'Workspace','書桌、插座與檯燈配置，方便整理行程或臨時處理工作。':'A desk, power outlets and task light help with planning or quick work.','舒適休息':'Comfortable rest','乾淨床鋪與簡潔空間，沒有不必要的鋪陳。':'Clean bedding and an uncluttered room keep the stay easy.','感應式房卡':'RFID key card','房門採感應式房卡進出，靠卡即可開門；入住期間請妥善保管。':'Tap the RFID key card at the door to enter. Please keep it with you during your stay.',
+            '早餐時光':'Breakfast time','從早晨開始，讓節奏慢一點。簡單補充元氣，再開始今天的行程。':'Start the morning at an easier pace, refuel, then head out for the day.','供應時間':'Service hours','最後入場':'Last entry','用餐地點':'Location','1F 餐廳':'1F restaurant',
+            '提供基本電腦與列印等服務，適合臨時處理文件、查詢資料或簡單辦公需求。':'A simple computer-and-printing setup for documents, quick searches or light work.','小型、實用，剛剛好。':'Compact and practical.','提供旅途中常用的基本辦公設備，需要處理文件或確認行程時更方便。':'Basic office equipment is available when you need to print a document or check your itinerary.','開放時間':'Hours','位置':'Location','設備':'Equipment','電腦 / 列印 / 影印 / 掃描':'Computer / print / copy / scan','1F 大廳旁':'Beside the 1F lobby',
+            '若還有一點時間，不妨到新莊周邊散步。從在地小吃到日常街區，也許比排滿行程更容易記住這座城市。':'If you have a little extra time, explore Xinzhuang at street level. Everyday neighborhoods and local food often make the best memories.','新莊體育場':'Xinzhuang Stadium','適合賽事或活動期間順路前往。距離為 Demo 示意。':'A useful nearby reference during games and events. Distances are demo data.','新莊廟街':'Xinzhuang Temple Street','老街與在地小吃的生活感，比「必去景點」更貼近日常。':'An older neighborhood with local food and everyday street life.','街區散步':'Neighborhood walk','想把步調放慢時，附近街區也很適合留一段沒有行程的時間。':'When you want to slow down, leave a little room for an unplanned walk.',
+            '每一次停留，都可能遇見值得記下來的小事。這裡收集旅途中那些剛剛好的片刻。':'Every stay has small moments worth remembering. This journal keeps a few of them.','在新莊的第一個清晨':'A first morning in Xinzhuang','一杯咖啡、一段散步，慢慢開始今天。':'Coffee, a short walk, and an easy start to the day.','回到房間以前':'Before heading back','不用把行程塞滿，城市也會留下自己的節奏。':'A city can leave an impression even when the itinerary is not full.',
+            '保持連線':'Stay connected','館內提供 Wi‑Fi，讓旅途中保持連線更輕鬆。':'Guest Wi‑Fi keeps messages, maps and quick work within reach.','複製示意密碼':'Copy Wi‑Fi password','此為 Demo 假資料，不代表任何真實飯店 Wi‑Fi 資訊。':'Demo credentials only. They do not represent any real hotel network.',
+            '把重要資訊整理清楚，讓入住更順手。':'The essentials, clearly organized for an easier stay.','入住時間':'Check-in','15:00 後':'After 15:00','退房時間':'Check-out','11:00 前':'Before 11:00','櫃檯服務':'Front desk','24 小時':'24 hours','全館禁菸':'Non-smoking property','依實際館規設定':'Set to actual hotel policy','房務資訊':'Housekeeping','依實際服務時段設定':'Set to actual service hours',
+            '需要協助？':'Need help?','若入住期間需要協助，歡迎與櫃檯聯繫。正式版本可放入電話、LINE、WhatsApp 或館內分機。':'For assistance during your stay, contact the front desk. The live version can include phone, LINE, WhatsApp or an in-house extension.'
+          };
+          const TEXT_ZH=Object.fromEntries(Object.entries(TEXT_EN).map(([k,v])=>[v,k]));
+          let currentLang=localStorage.getItem('lume-lang')||'zh';
+          function translateText(lang){
+            const map=lang==='en'?TEXT_EN:TEXT_ZH;
+            const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);
+            const nodes=[];while(walker.nextNode())nodes.push(walker.currentNode);
+            nodes.forEach(n=>{const t=n.nodeValue.trim();if(map[t])n.nodeValue=n.nodeValue.replace(t,map[t]);});
+            document.querySelectorAll('[data-zh][data-en]').forEach(el=>el.textContent=el.dataset[lang]);
+            document.querySelectorAll('.lang-btn').forEach(b=>b.classList.toggle('active',b.dataset.lang===lang));
+            document.documentElement.lang=lang==='zh'?'zh-Hant':'en';currentLang=lang;localStorage.setItem('lume-lang',lang);
+          }
+          function showToast(msg){let el=document.getElementById('lume-toast');if(!el){el=document.createElement('div');el.id='lume-toast';el.className='toast';document.body.appendChild(el)}el.textContent=msg;el.classList.add('show');clearTimeout(window.__lt);window.__lt=setTimeout(()=>el.classList.remove('show'),1400)}
+          async function copyText(v){try{await navigator.clipboard.writeText(v);showToast(currentLang==='en'?'Copied':'已複製')}catch(e){showToast(currentLang==='en'?'Could not copy':'無法複製')}}
+          document.querySelectorAll('.lang-btn').forEach(b=>b.addEventListener('click',()=>translateText(b.dataset.lang)));
+          window.copyWifi=()=>copyText(document.getElementById('wifi-pass').textContent.trim());
+          document.querySelectorAll('.city-card').forEach((card,i)=>{const qs=['新莊體育場','新莊廟街','新莊區'];const a=document.createElement('a');a.className='action-btn';a.target='_blank';a.rel='noopener';a.href='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(qs[i]);a.dataset.zh='開啟地圖';a.dataset.en='Open map';a.textContent=currentLang==='en'?'Open map':'開啟地圖';card.appendChild(a)});
+          const contact=document.querySelector('#contact .footer');if(contact){const row=document.createElement('div');row.className='action-row';const b=document.createElement('button');b.type='button';b.className='action-btn primary';b.dataset.zh='複製櫃檯分機 9';b.dataset.en='Copy front-desk ext. 9';b.textContent='複製櫃檯分機 9';b.addEventListener('click',()=>copyText('9'));row.appendChild(b);contact.before(row)}
+          if(currentLang==='en')translateText('en');
+          </script>
+          '''
+          s = s.replace('</body>', js + '</body>', 1)
+          p.write_text(s, encoding='utf-8')
+          PY
+
+      - name: Static QA
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          s=Path('staging/river-hotel/index.html').read_text(encoding='utf-8')
+          checks={
+            'v2.3 title':'Real Hospitality Demo v2.3' in s,
+            '3 real-photo refs':s.count('images.pexels.com')>=3,
+            'language switch':'class="lang-float"' in s and 'data-lang="en"' in s,
+            'maps':'google.com/maps/search' in s,
+            'no RIVER':'RIVER HOTEL' not in s,
+          }
+          for k,v in checks.items(): print(('PASS' if v else 'FAIL'),k)
+          if not all(checks.values()): raise SystemExit(1)
+          PY
+
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
 
