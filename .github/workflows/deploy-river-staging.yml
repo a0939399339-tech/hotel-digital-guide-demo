@@ -1,4 +1,4 @@
-name: Deploy RIVER HOTEL Staging
+name: Deploy LUME HOTEL Staging
 
 on:
   workflow_dispatch:
@@ -14,7 +14,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: river-hotel-staging-pages
+  group: lume-hotel-staging-pages
   cancel-in-progress: true
 
 jobs:
