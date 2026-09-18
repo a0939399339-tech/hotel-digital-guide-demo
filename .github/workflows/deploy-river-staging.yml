@@ -235,6 +235,49 @@ jobs:
           p.write_text(s, encoding='utf-8')
           PY
 
+      - name: Apply LUME v2.6 Wi-Fi QR Upgrade
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          p = Path('staging/river-hotel/index.html')
+          s = p.read_text(encoding='utf-8')
+          s = s.replace('Real Hospitality Demo v2.5', 'Real Hospitality Demo v2.6')
+
+          wifi_css = r'''
+          /* LUME v2.6 Wi-Fi QR Upgrade */
+          .wifi-connect-grid{display:grid;gap:18px;margin-top:22px;align-items:stretch}
+          .wifi-qr-card{margin:0;padding:18px;border:1px solid var(--line);border-radius:20px;background:#fff;display:grid;place-items:center;text-align:center}
+          .wifi-qr-card img{display:block;width:min(100%,240px);height:auto;aspect-ratio:1/1;border-radius:14px}
+          .wifi-qr-card figcaption{margin-top:12px;font-size:12px;line-height:1.55;color:var(--muted)}
+          .wifi-details{padding:20px;border:1px solid var(--line);border-radius:20px;background:rgba(255,255,255,.92)}
+          .wifi-details .info{margin-bottom:10px}
+          .wifi-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+          .wifi-actions .action-btn{min-height:44px}
+          .wifi-note{margin-top:16px;padding:13px 14px;border-radius:14px;background:var(--accent-soft);color:#80502f;font-size:12px;line-height:1.6}
+          @media(min-width:760px){.wifi-connect-grid{grid-template-columns:minmax(250px,.82fr) minmax(0,1.18fr)}}
+          @media(max-width:759px){
+            .wifi-connect-grid{gap:12px}
+            .wifi-qr-card{padding:16px}
+            .wifi-qr-card img{width:min(78vw,230px)}
+            .wifi-details{padding:17px}
+            .wifi-actions .action-btn{flex:1 1 calc(50% - 4px)}
+          }
+          @media(max-width:430px){.wifi-actions .action-btn{flex-basis:100%}}
+          '''
+          s = s.replace('</style>', wifi_css + '</style>', 1)
+
+          wifi_section = '''<section class="section" id="wifi"><div class="wrap"><div class="section-head"><a class="back" data-en="← Back to guide" data-zh="← 返回指南" href="#home">← 返回指南</a><div class="brand">WI‑FI</div></div><div class="eyebrow">WI‑FI</div><h2 data-en="Wi‑Fi" data-zh="Wi‑Fi">Wi‑Fi</h2><p class="lead" data-en="Scan the QR code to join Wi‑Fi. If you are viewing this page on the same phone, use the network details below instead." data-zh="掃描 QR Code 可直接加入 Wi‑Fi；若正使用同一支手機瀏覽本頁，請使用下方帳密連線。">掃描 QR Code 可直接加入 Wi‑Fi；若正使用同一支手機瀏覽本頁，請使用下方帳密連線。</p><div class="wifi-connect-grid"><figure class="wifi-qr-card"><img src="assets/lume-wifi-qr.svg" alt="LUME Guest Wi-Fi QR Code" width="240" height="240"><figcaption data-en="Scan to join LUME_GUEST_DEMO" data-zh="掃描直接連線 · LUME_GUEST_DEMO">掃描直接連線 · LUME_GUEST_DEMO</figcaption></figure><div class="wifi-details"><div class="info"><b>SSID</b><span id="wifi-ssid">LUME_GUEST_DEMO</span></div><div class="info"><b>Password</b><span id="wifi-pass">DEMO-ONLY-2026</span></div><div class="wifi-actions"><button class="action-btn" data-copy="LUME_GUEST_DEMO" data-en="Copy network name" data-zh="複製網路名稱" type="button">複製網路名稱</button><button class="action-btn primary" data-copy="DEMO-ONLY-2026" data-en="Copy password" data-zh="複製 Wi‑Fi 密碼" type="button">複製 Wi‑Fi 密碼</button></div><div class="wifi-note" data-en="Using this guide on the same phone? Copy the password above, then open your phone’s Wi‑Fi settings. Demo credentials only; they do not connect to a real network." data-zh="正用同一支手機看本頁？請複製上方密碼，再到手機 Wi‑Fi 設定連線。示範站使用假帳密，無法連線至真實網路。">正用同一支手機看本頁？請複製上方密碼，再到手機 Wi‑Fi 設定連線。示範站使用假帳密，無法連線至真實網路。</div></div></div></div></section>'''
+
+          s, count = re.subn(r'<section class="section" id="wifi">.*?</section>(?=<section class="section" id="stay">)', wifi_section, s, count=1)
+          if count != 1:
+              raise SystemExit('Wi-Fi section replacement failed')
+
+          p.write_text(s, encoding='utf-8')
+          PY
+
       - name: Static QA
         shell: bash
         run: |
@@ -248,9 +291,10 @@ jobs:
             'assets/lume-breakfast.webp',
             'assets/lume-business.webp',
             'assets/lume-city.webp',
+            'assets/lume-wifi-qr.svg',
           ]
           checks = {
-            'v2.5 title': 'Real Hospitality Demo v2.5' in s,
+            'v2.6 title': 'Real Hospitality Demo v2.6' in s,
             'mobile polish marker': 'LUME v2.4 Mobile Polish' in s,
             'viewport meta': 'width=device-width' in s,
             '44px touch targets': 'min-height:44px' in s,
@@ -260,6 +304,8 @@ jobs:
             'language switch': 'class="lang-float"' in s and 'data-lang="en"' in s,
             'maps': s.count('google.com/maps/search') == 3,
             'copy controls': 'data-copy="9"' in s and 'wifi-pass' in s,
+            'wifi QR': 'assets/lume-wifi-qr.svg' in s and 'wifi-ssid' in s and 'DEMO-ONLY-2026' in s,
+            'wifi same-phone fallback': '正用同一支手機看本頁？' in s,
             'city disclosure': 'AI 情境示意' in s,
             'journal removed': 'id=\"journal\"' not in s and 'href=\"#journal\"' not in s,
             'guest copy cleaned': '正式版本可放入' not in s and '依實際館規設定' not in s and '依實際服務時段設定' not in s,
