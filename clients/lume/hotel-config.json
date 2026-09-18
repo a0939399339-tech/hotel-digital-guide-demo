@@ -1,0 +1,64 @@
+{
+  "schema_version": "2.0",
+  "property": {
+    "name": "LUME HOTEL",
+    "hero_eyebrow": "XINZHUANG · CITY STAY",
+    "footer": "LUME HOTEL · HOSPITALITY GUEST GUIDE DEMO · FICTIONAL PROPERTY"
+  },
+  "theme": {
+    "accent": "#c97a3d",
+    "accent_soft": "#fff1e6",
+    "bg": "#fffaf6"
+  },
+  "modules": {
+    "room": true,
+    "breakfast": true,
+    "facilities": true,
+    "city": true,
+    "wifi": true,
+    "stay": true,
+    "contact": true
+  },
+  "wifi": {
+    "ssid": "LUME_GUEST_DEMO",
+    "password": "DEMO-ONLY-2026",
+    "security": "WPA",
+    "hidden": false,
+    "qr_asset": "assets/lume-wifi-qr.svg"
+  },
+  "breakfast": {
+    "hours": "06:30–10:00",
+    "last_entry": "09:30",
+    "location_zh": "1F 餐廳",
+    "location_en": "1F restaurant"
+  },
+  "facilities": [
+    {
+      "id": "business-corner",
+      "name_zh": "商務角落",
+      "name_en": "Business corner",
+      "hours_zh": "24 小時",
+      "hours_en": "24 hours",
+      "location_zh": "1F 大廳旁",
+      "location_en": "Beside the 1F lobby",
+      "equipment_zh": "電腦 / 列印 / 影印 / 掃描",
+      "equipment_en": "Computer / print / copy / scan"
+    }
+  ],
+  "nearby": [
+    {"category": "SPORTS", "name_zh": "新莊體育場", "name_en": "Xinzhuang Stadium", "map_query": "新莊體育場"},
+    {"category": "LOCAL", "name_zh": "新莊廟街", "name_en": "Xinzhuang Temple Street", "map_query": "新莊廟街"},
+    {"category": "WALK", "name_zh": "河濱散步", "name_en": "Riverside walk", "map_query": "新莊河濱公園"}
+  ],
+  "stay": {
+    "check_in_zh": "15:00 後",
+    "check_in_en": "After 15:00",
+    "check_out_zh": "11:00 前",
+    "check_out_en": "Before 11:00",
+    "front_desk_zh": "24 小時",
+    "front_desk_en": "24 hours"
+  },
+  "contact": {
+    "front_desk_extension": "9"
+  }
+}
