@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import argparse, json
+import argparse, json, re
 from pathlib import Path
 from urllib.parse import quote_plus
 
@@ -42,6 +42,7 @@ def main():
     ap=argparse.ArgumentParser()
     ap.add_argument("--config",required=True,type=Path)
     ap.add_argument("--html",required=True,type=Path)
+    ap.add_argument("--css",type=Path)
     args=ap.parse_args()
 
     cfg=json.loads(args.config.read_text(encoding="utf-8"))
@@ -69,14 +70,29 @@ def main():
     if footer:
         footer.string=cfg["property"].get("footer",footer.get_text(strip=True))
 
-    style=soup.find("style")
-    if style:
-        t=cfg.get("theme",{})
-        style.append(
-            f":root{{--bg:{t.get('bg','#fffaf6')};"
-            f"--accent:{t.get('accent','#c97a3d')};"
-            f"--accent-soft:{t.get('accent_soft','#fff1e6')}}}"
-        )
+    # Theme tokens are applied to the extracted stylesheet. Keep the inline
+    # fallback for older templates during migration.
+    t=cfg.get("theme",{})
+    if args.css:
+        css=args.css.read_text(encoding="utf-8")
+        for token,value in (
+            ("bg",t.get("bg","#fffaf6")),
+            ("accent",t.get("accent","#c97a3d")),
+            ("accent-soft",t.get("accent_soft","#fff1e6"))
+        ):
+            pattern=rf"(--{re.escape(token)}\s*:\s*)[^;}}]+"
+            css,count=re.subn(pattern,lambda m:m.group(1)+value,css,count=1)
+            if count!=1:
+                raise SystemExit(f"theme token --{token} not found in {args.css}")
+        args.css.write_text(css,encoding="utf-8")
+    else:
+        style=soup.find("style")
+        if style:
+            style.append(
+                f":root{{--bg:{t.get('bg','#fffaf6')};"
+                f"--accent:{t.get('accent','#c97a3d')};"
+                f"--accent-soft:{t.get('accent_soft','#fff1e6')}}}"
+            )
 
     # Module switches: false removes both homepage entry and section.
     mods=cfg["modules"]
