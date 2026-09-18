@@ -27,125 +27,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Assemble LUME v2.3 artifact
+      - name: Assemble LUME v2.5 artifact
         shell: bash
         run: |
-          cat staging/river-hotel/.v23/part*.txt | base64 -d | gzip -d > staging/river-hotel/index.html
-
-      - name: Apply selected LUME visual set
-        shell: bash
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          import re
-
-          p = Path('staging/river-hotel/index.html')
-          s = p.read_text(encoding='utf-8')
-
-          replacements = {
-            r'https://images\.pexels\.com/photos/37734643/[^"\']+': 'assets/lume-room.webp',
-            r'https://images\.pexels\.com/photos/4916557/[^"\']+': 'assets/lume-breakfast.webp',
-            r'https://images\.pexels\.com/photos/9574509/[^"\']+': 'assets/lume-business.webp',
-          }
-          for pattern, replacement in replacements.items():
-              s, count = re.subn(pattern, replacement, s, count=1)
-              if count != 1:
-                  raise SystemExit(f'Expected exactly one replacement for {pattern}, got {count}')
-
-          visual_css = r'''
-          /* Selected LUME visual set — guest-approved demo imagery */
-          .hero{
-            background:
-              linear-gradient(90deg,rgba(255,250,246,.95) 0%,rgba(255,250,246,.84) 34%,rgba(255,250,246,.34) 63%,rgba(255,250,246,.08) 100%),
-              url('assets/lume-hero.webp') 62% center/cover no-repeat !important;
-          }
-          .hero:after{background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,250,246,.10)) !important}
-          .hero-inner{max-width:1040px}
-          .hero-inner>p,.hero-inner>small{max-width:540px}
-          .city-photo img{min-height:210px;max-height:420px;object-position:center}
-          @media(max-width:759px){
-            .hero{
-              background:
-                linear-gradient(180deg,rgba(255,250,246,.94) 0%,rgba(255,250,246,.80) 45%,rgba(255,250,246,.28) 100%),
-                url('assets/lume-hero.webp') 62% center/cover no-repeat !important;
-            }
-            .city-photo img{min-height:170px;max-height:260px}
-          }
-          '''
-          s = s.replace('</style>', visual_css + '</style>', 1)
-
-          city_figure = '''<figure class="photo-block city-photo"><img src="assets/lume-city.webp" alt="城市河濱散步情境示意" loading="lazy" decoding="async"><figcaption data-zh="城市河濱散步情境示意 · AI-generated demo visual" data-en="Urban riverside walk · AI-generated demo visual">城市河濱散步情境示意 · AI-generated demo visual</figcaption></figure>'''
-          if 'assets/lume-city.webp' not in s:
-              s = s.replace('<div class="city-grid">', city_figure + '<div class="city-grid">', 1)
-
-          p.write_text(s, encoding='utf-8')
-          PY
-
-      - name: Apply LUME v2.4 Mobile Polish
-        shell: bash
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-
-          p = Path('staging/river-hotel/index.html')
-          s = p.read_text(encoding='utf-8')
-          s = s.replace('Real Hospitality Demo v2.3', 'Real Hospitality Demo v2.4')
-
-          mobile_css = r'''
-          /* LUME v2.4 Mobile Polish */
-          @media(max-width:759px){
-            html{scroll-padding-top:64px}
-            body{overflow-x:hidden}
-            .hero{
-              min-height:70svh;
-              background:
-                linear-gradient(180deg,rgba(255,250,246,.22) 0%,rgba(255,250,246,.58) 52%,rgba(255,250,246,.94) 100%),
-                url('assets/lume-hero.webp') 64% center/cover no-repeat !important;
-            }
-            .hero-inner{padding:92px 18px 30px}
-            .hero h1{font-size:clamp(38px,13vw,54px);line-height:1;letter-spacing:.045em;margin-bottom:10px}
-            .hero p{font-size:17px;line-height:1.5;margin-bottom:14px;max-width:92%}
-            .hero small{font-size:12px;line-height:1.6;margin-bottom:22px;max-width:92%}
-            .cta{min-height:46px;padding:12px 17px;font-size:13px}
-            .section{padding:30px 16px 58px}
-            .section-head{margin-bottom:22px;padding-top:16px;gap:12px}
-            .section-head h2{font-size:28px}
-            .back{min-height:44px;display:inline-flex;align-items:center}
-            .quick{gap:9px;margin:22px 0}
-            .quick a{min-height:80px;padding:14px;border-radius:16px}
-            .quick b{font-size:15px}
-            .quick span{font-size:10.5px;line-height:1.45}
-            .panel{padding:18px;border-radius:18px}
-            .split{gap:12px}
-            .split>.photo-block img{min-height:210px;max-height:270px}
-            .photo-block{margin-top:18px;border-radius:18px}
-            .photo-block img{min-height:190px;max-height:260px}
-            .photo-block figcaption{padding:8px 11px;line-height:1.45}
-            .city-photo img{min-height:180px!important;max-height:230px!important}
-            .feature-row{gap:10px}
-            .feature{padding:16px;border-radius:16px}
-            .city-grid{gap:10px;margin-top:16px}
-            .city-card{padding:16px;border-radius:16px}
-            .info-grid{gap:8px;margin-top:14px}
-            .info{display:grid;gap:5px;padding:12px 0}
-            .info span{text-align:left;font-size:12px}
-            .row{padding:14px;gap:10px}
-            .row span{font-size:11.5px}
-            .action-row{gap:8px;margin-top:14px}
-            .action-btn{min-height:44px;padding:11px 14px;font-size:12px}
-            .lang-float{top:max(8px,env(safe-area-inset-top));right:8px;gap:2px;padding:3px}
-            .lang-btn{min-height:38px;min-width:40px;padding:8px 9px}
-            .toast{bottom:max(18px,env(safe-area-inset-bottom));max-width:calc(100vw - 32px);text-align:center}
-          }
-          @media(max-width:430px){
-            .row{flex-direction:column;align-items:flex-start}
-            .row span{text-align:left}
-            .action-row .action-btn{flex:1 1 calc(50% - 4px)}
-          }
-          '''
-          s = s.replace('</style>', mobile_css + '</style>', 1)
-          p.write_text(s, encoding='utf-8')
-          PY
+          cat staging/river-hotel/.v25/part*.txt | base64 -d | gzip -d > staging/river-hotel/index.html
 
       - name: Static QA
         shell: bash
@@ -162,7 +47,7 @@ jobs:
             'assets/lume-city.webp',
           ]
           checks = {
-            'v2.4 title': 'Real Hospitality Demo v2.4' in s,
+            'v2.5 title': 'Real Hospitality Demo v2.5' in s,
             'mobile polish marker': 'LUME v2.4 Mobile Polish' in s,
             'viewport meta': 'width=device-width' in s,
             '44px touch targets': 'min-height:44px' in s,
@@ -172,8 +57,8 @@ jobs:
             'language switch': 'class="lang-float"' in s and 'data-lang="en"' in s,
             'maps': s.count('google.com/maps/search') == 3,
             'copy controls': 'data-copy="9"' in s and 'wifi-pass' in s,
-            'city disclosure': 'AI-generated demo visual' in s,
-            'no RIVER': 'RIVER HOTEL' not in s,
+            'city disclosure': 'AI 情境示意' in s,
+            'journal removed': 'id=\"journal\"' not in s and 'href=\"#journal\"' not in s,\n            'guest copy cleaned': '正式版本可放入' not in s and '依實際館規設定' not in s and '依實際服務時段設定' not in s,\n            'no RIVER': 'RIVER HOTEL' not in s,
           }
           for k, v in checks.items():
               print(('PASS' if v else 'FAIL'), k)
