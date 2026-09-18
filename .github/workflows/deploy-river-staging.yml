@@ -8,6 +8,7 @@ on:
       - "themes/lume/**"
       - "clients/lume/**"
       - "core-v2/**"
+      - "sales/**"
       - "staging/river-hotel/assets/**"
       - ".github/workflows/deploy-river-staging.yml"
 
@@ -36,6 +37,13 @@ jobs:
           mkdir -p staging/river-hotel
           cp themes/lume/index.html staging/river-hotel/index.html
           cp themes/lume/styles.css staging/river-hotel/styles.css
+
+      - name: Prepare commercial sales page
+        shell: bash
+        run: |
+          mkdir -p staging/river-hotel/sales
+          cp sales/index.html staging/river-hotel/sales/index.html
+          cp sales/styles.css staging/river-hotel/sales/styles.css
 
       - name: Install Hospitality Core v2 dependencies
         run: python3 -m pip install -r core-v2/requirements.txt
@@ -84,6 +92,36 @@ jobs:
               'journal removed': 'id="journal"' not in html and 'href="#journal"' not in html,
               'guest copy cleaned': '正式版本可放入' not in html and '依實際館規設定' not in html and '依實際服務時段設定' not in html,
               'no RIVER': 'RIVER HOTEL' not in html,
+          }
+
+          for key, value in checks.items():
+              print(('PASS' if value else 'FAIL'), key)
+
+          if not all(checks.values()):
+              raise SystemExit(1)
+          PY
+
+      - name: Commercial page QA
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          root = Path('staging/river-hotel/sales')
+          html = (root / 'index.html').read_text(encoding='utf-8')
+          css = (root / 'styles.css').read_text(encoding='utf-8')
+
+          checks = {
+              'sales html exists': (root / 'index.html').exists(),
+              'sales css exists': (root / 'styles.css').exists(),
+              'sales title': 'LUME Digital Guest Guide' in html,
+              'mobile viewport': 'width=device-width' in html,
+              'early partner price': 'NT$12,800' in html,
+              'standard price': 'NT$19,800' in html,
+              'care price': 'NT$6,000 / 年' in html,
+              'demo link': 'href="../"' in html,
+              'scope boundary': '不是無上限客製網站' in html,
+              'responsive css': '@media(max-width:520px)' in css,
           }
 
           for key, value in checks.items():
