@@ -261,7 +261,9 @@ jobs:
             'maps': s.count('google.com/maps/search') == 3,
             'copy controls': 'data-copy="9"' in s and 'wifi-pass' in s,
             'city disclosure': 'AI 情境示意' in s,
-            'journal removed': 'id=\"journal\"' not in s and 'href=\"#journal\"' not in s,\n            'guest copy cleaned': '正式版本可放入' not in s and '依實際館規設定' not in s and '依實際服務時段設定' not in s,\n            'no RIVER': 'RIVER HOTEL' not in s,
+            'journal removed': 'id=\"journal\"' not in s and 'href=\"#journal\"' not in s,
+            'guest copy cleaned': '正式版本可放入' not in s and '依實際館規設定' not in s and '依實際服務時段設定' not in s,
+            'no RIVER': 'RIVER HOTEL' not in s,
           }
           for k, v in checks.items():
               print(('PASS' if v else 'FAIL'), k)
