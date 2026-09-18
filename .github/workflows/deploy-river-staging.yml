@@ -5,7 +5,10 @@ on:
   push:
     branches: ["main"]
     paths:
-      - "staging/river-hotel/**"
+      - "themes/lume/**"
+      - "clients/lume/**"
+      - "core-v2/**"
+      - "staging/river-hotel/assets/**"
       - ".github/workflows/deploy-river-staging.yml"
 
 permissions:
@@ -27,301 +30,65 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Assemble LUME v2.3 artifact
+      - name: Prepare LUME theme
         shell: bash
         run: |
-          cat staging/river-hotel/.v23/part*.txt | base64 -d | gzip -d > staging/river-hotel/index.html
-
-      - name: Apply selected LUME visual set
-        shell: bash
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          import re
-
-          p = Path('staging/river-hotel/index.html')
-          s = p.read_text(encoding='utf-8')
-
-          replacements = {
-            r'https://images\.pexels\.com/photos/37734643/[^"\']+': 'assets/lume-room.webp',
-            r'https://images\.pexels\.com/photos/4916557/[^"\']+': 'assets/lume-breakfast.webp',
-            r'https://images\.pexels\.com/photos/9574509/[^"\']+': 'assets/lume-business.webp',
-          }
-          for pattern, replacement in replacements.items():
-              s, count = re.subn(pattern, replacement, s, count=1)
-              if count != 1:
-                  raise SystemExit(f'Expected exactly one replacement for {pattern}, got {count}')
-
-          visual_css = r'''
-          /* Selected LUME visual set — guest-approved demo imagery */
-          .hero{
-            background:
-              linear-gradient(90deg,rgba(255,250,246,.95) 0%,rgba(255,250,246,.84) 34%,rgba(255,250,246,.34) 63%,rgba(255,250,246,.08) 100%),
-              url('assets/lume-hero.webp') 62% center/cover no-repeat !important;
-          }
-          .hero:after{background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,250,246,.10)) !important}
-          .hero-inner{max-width:1040px}
-          .hero-inner>p,.hero-inner>small{max-width:540px}
-          .city-photo img{min-height:210px;max-height:420px;object-position:center}
-          @media(max-width:759px){
-            .hero{
-              background:
-                linear-gradient(180deg,rgba(255,250,246,.94) 0%,rgba(255,250,246,.80) 45%,rgba(255,250,246,.28) 100%),
-                url('assets/lume-hero.webp') 62% center/cover no-repeat !important;
-            }
-            .city-photo img{min-height:170px;max-height:260px}
-          }
-          '''
-          s = s.replace('</style>', visual_css + '</style>', 1)
-
-          city_figure = '''<figure class="photo-block city-photo"><img src="assets/lume-city.webp" alt="城市河濱散步情境示意" loading="lazy" decoding="async"><figcaption data-zh="城市河濱散步情境示意 · AI-generated demo visual" data-en="Urban riverside walk · AI-generated demo visual">城市河濱散步情境示意 · AI-generated demo visual</figcaption></figure>'''
-          if 'assets/lume-city.webp' not in s:
-              s = s.replace('<div class="city-grid">', city_figure + '<div class="city-grid">', 1)
-
-          p.write_text(s, encoding='utf-8')
-          PY
-
-      - name: Apply LUME v2.4 Mobile Polish
-        shell: bash
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-
-          p = Path('staging/river-hotel/index.html')
-          s = p.read_text(encoding='utf-8')
-          s = s.replace('Real Hospitality Demo v2.3', 'Real Hospitality Demo v2.4')
-
-          mobile_css = r'''
-          /* LUME v2.4 Mobile Polish */
-          @media(max-width:759px){
-            html{scroll-padding-top:64px}
-            body{overflow-x:hidden}
-            .hero{
-              min-height:70svh;
-              background:
-                linear-gradient(180deg,rgba(255,250,246,.22) 0%,rgba(255,250,246,.58) 52%,rgba(255,250,246,.94) 100%),
-                url('assets/lume-hero.webp') 64% center/cover no-repeat !important;
-            }
-            .hero-inner{padding:92px 18px 30px}
-            .hero h1{font-size:clamp(38px,13vw,54px);line-height:1;letter-spacing:.045em;margin-bottom:10px}
-            .hero p{font-size:17px;line-height:1.5;margin-bottom:14px;max-width:92%}
-            .hero small{font-size:12px;line-height:1.6;margin-bottom:22px;max-width:92%}
-            .cta{min-height:46px;padding:12px 17px;font-size:13px}
-            .section{padding:30px 16px 58px}
-            .section-head{margin-bottom:22px;padding-top:16px;gap:12px}
-            .section-head h2{font-size:28px}
-            .back{min-height:44px;display:inline-flex;align-items:center}
-            .quick{gap:9px;margin:22px 0}
-            .quick a{min-height:80px;padding:14px;border-radius:16px}
-            .quick b{font-size:15px}
-            .quick span{font-size:10.5px;line-height:1.45}
-            .panel{padding:18px;border-radius:18px}
-            .split{gap:12px}
-            .split>.photo-block img{min-height:210px;max-height:270px}
-            .photo-block{margin-top:18px;border-radius:18px}
-            .photo-block img{min-height:190px;max-height:260px}
-            .photo-block figcaption{padding:8px 11px;line-height:1.45}
-            .city-photo img{min-height:180px!important;max-height:230px!important}
-            .feature-row{gap:10px}
-            .feature{padding:16px;border-radius:16px}
-            .city-grid{gap:10px;margin-top:16px}
-            .city-card{padding:16px;border-radius:16px}
-            .info-grid{gap:8px;margin-top:14px}
-            .info{display:grid;gap:5px;padding:12px 0}
-            .info span{text-align:left;font-size:12px}
-            .row{padding:14px;gap:10px}
-            .row span{font-size:11.5px}
-            .action-row{gap:8px;margin-top:14px}
-            .action-btn{min-height:44px;padding:11px 14px;font-size:12px}
-            .lang-float{top:max(8px,env(safe-area-inset-top));right:8px;gap:2px;padding:3px}
-            .lang-btn{min-height:38px;min-width:40px;padding:8px 9px}
-            .toast{bottom:max(18px,env(safe-area-inset-bottom));max-width:calc(100vw - 32px);text-align:center}
-          }
-          @media(max-width:430px){
-            .row{flex-direction:column;align-items:flex-start}
-            .row span{text-align:left}
-            .action-row .action-btn{flex:1 1 calc(50% - 4px)}
-          }
-          '''
-          s = s.replace('</style>', mobile_css + '</style>', 1)
-          p.write_text(s, encoding='utf-8')
-          PY
-
-      - name: Apply LUME v2.5 Content Polish
-        shell: bash
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          import re
-
-          p = Path('staging/river-hotel/index.html')
-          s = p.read_text(encoding='utf-8')
-          s = s.replace('Real Hospitality Demo v2.4', 'Real Hospitality Demo v2.5')
-
-          pairs = [
-            ('位於新莊的城市型旅宿，以乾淨、舒適與安靜為核心，讓每一次停留，都多一分從容。','位於新莊的城市型旅宿，乾淨、舒適、安靜。無論出差或旅行，都能自在停留。'),
-            ('A fictional city stay in Xinzhuang, shaped around cleanliness, comfort and a calmer rhythm.','A clean, comfortable city stay in Xinzhuang—easy for business trips and short getaways alike.'),
-            ('旅途中真正需要的資訊，都整理在這裡。從房間設備、早餐時間到附近散步，一眼就能找到。','房內設備、早餐、Wi‑Fi 與附近資訊，都替你整理好了。'),
-            ('Everything you actually need during your stay, from room essentials and breakfast hours to nearby places, in one place.','Room details, breakfast, Wi‑Fi and nearby essentials—all in one place.'),
-            ('基本辦公支援','1 台電腦 / 列印'),
-            ('明亮俐落的空間配置，搭配舒適床鋪與基本設備，讓每一次停留都更自在。','明亮俐落的客房，搭配舒適床鋪與實用設備，讓休息與簡單工作都更自在。'),
-            ('A room should feel simple, comfortable and easy. Bright, practical details make it easy to rest or get a little work done.','A bright, practical room with a comfortable bed and the essentials for rest or light work.'),
-            ('標準商旅客房示意','標準客房情境示意'),
-            ('Standard business-room reference','Standard room · demo visual'),
-            ('實用，才是商旅的核心。','房內設備'),
-            ('Practical comfort comes first.','In-room essentials'),
-            ('標準床鋪、工作桌、電視、空調與基本備品，讓休息與簡單工作都能自然切換。','常用設備都已備妥，入住後可以直接休息或整理行程。'),
-            ('A comfortable bed, work desk, TV, climate control and everyday essentials make it easy to switch between rest and work.','The everyday essentials are ready for you, whether you are settling in or planning the next day.'),
-            ('書桌、插座與檯燈配置，方便整理行程或臨時處理工作。','書桌、插座與檯燈，方便整理行程或臨時處理工作。'),
-            ('A desk, power outlets and task light help with planning or quick work.','A desk, outlets and a lamp make it easy to plan your route or get a little work done.'),
-            ('乾淨床鋪與簡潔空間，沒有不必要的鋪陳。','舒適床鋪與簡潔空間，讓休息更單純。'),
-            ('Clean bedding and an uncluttered room keep the stay easy.','A comfortable bed and uncluttered space keep rest simple.'),
-            ('房門採感應式房卡進出，靠卡即可開門；入住期間請妥善保管。','房門採感應式房卡進出，靠卡即可開門；外出時請隨身攜帶。'),
-            ('Tap the RFID key card at the door to enter. Please keep it with you during your stay.','Tap the RFID key card at the door to enter, and keep it with you when you go out.'),
-            ('從早晨開始，讓節奏慢一點。簡單補充元氣，再開始今天的行程。','早餐於 1F 餐廳供應，吃點東西再從容出發。'),
-            ('Start the morning at an easier pace, refuel, then head out for the day.','Breakfast is served in the 1F restaurant—an easy start before heading out.'),
-            ('早餐空間示意','早餐餐點情境示意'),
-            ('Breakfast-space reference','Breakfast · demo visual'),
-            ('商務中心','商務角落'),
-            ('提供基本電腦與列印等服務，適合臨時處理文件、查詢資料或簡單辦公需求。','需要臨時查資料、列印文件或簡單辦公，可使用 1F 大廳旁的商務角落。'),
-            ('A simple computer-and-printing setup for documents, quick searches or light work.','For quick searches, printing or light work, use the business corner beside the 1F lobby.'),
-            ('小型、實用，剛剛好。','基本辦公支援'),
-            ('Compact and practical.','Basic work support'),
-            ('提供旅途中常用的基本辦公設備，需要處理文件或確認行程時更方便。','提供 1 台電腦與列印設備，適合短時間使用。'),
-            ('Basic office equipment is available when you need to print a document or check your itinerary.','One computer and printing equipment are available for short, practical use.'),
-            ('小型商務角落示意','商務角落情境示意'),
-            ('Compact business-corner reference','Business corner · demo visual'),
-            ('若還有一點時間，不妨到新莊周邊散步。從在地小吃到日常街區，也許比排滿行程更容易記住這座城市。','想在附近走走，新莊體育場、廟街與河濱都是輕鬆的選擇。'),
-            ('If you have a little extra time, explore Xinzhuang at street level. Everyday neighborhoods and local food often make the best memories.','For a short walk nearby, Xinzhuang Stadium, Temple Street and the riverside are easy places to start.'),
-            ('城市河濱散步情境示意 · AI-generated demo visual','新莊河濱散步 · AI 情境示意'),
-            ('Urban riverside walk · AI-generated demo visual','Xinzhuang riverside walk · AI demo visual'),
-            ('適合賽事或活動期間順路前往。距離為 Demo 示意。','賽事或活動期間的人氣去處，可直接開啟地圖查看路線。'),
-            ('A useful nearby reference during games and events. Distances are demo data.','A popular stop during games and events. Open the map for directions.'),
-            ('老街與在地小吃的生活感，比「必去景點」更貼近日常。','老街、廟宇與在地小吃集中，適合慢慢走一段。'),
-            ('An older neighborhood with local food and everyday street life.','An older neighborhood for local food, temples and everyday street life.'),
-            ('街區散步','河濱散步'),
-            ('Neighborhood walk','Riverside walk'),
-            ('想把步調放慢時，附近街區也很適合留一段沒有行程的時間。','想放慢步調時，到河濱走走、吹吹風就很剛好。'),
-            ('When you want to slow down, leave a little room for an unplanned walk.','A relaxed option when you want some open space and an easy walk.'),
-            ('query=新莊區','query=新莊河濱公園'),
-            ('DEMO DATA · 實際上線時以飯店真實距離與交通方式為準','LUME HOTEL 為虛構示範旅宿，周邊地點僅作功能展示。'),
-            ('DEMO DATA · Live version uses verified distances and transport details.','LUME HOTEL is a fictional demo property. Nearby places are shown for feature demonstration only.'),
-            ('保持連線','Wi‑Fi'),
-            ('Stay connected','Wi‑Fi'),
-            ('館內提供 Wi‑Fi，讓旅途中保持連線更輕鬆。','館內 Wi‑Fi 資訊如下。'),
-            ('Guest Wi‑Fi keeps messages, maps and quick work within reach.','Guest Wi‑Fi details are listed below.'),
-            ('此為 Demo 假資料，不代表任何真實飯店 Wi‑Fi 資訊。','示範站使用假帳密，無法連線至真實網路。'),
-            ('Demo credentials only. They do not represent any real hotel network.','Demo credentials only; they will not connect to a real network.'),
-            ('把重要資訊整理清楚，讓入住更順手。','入住、退房與館內規範都整理在這裡。'),
-            ('The essentials, clearly organized for an easier stay.','Check-in, check-out and key house rules are all here.'),
-            ('依實際館規設定','客房與室內公共區域禁止吸菸'),
-            ('Set to actual hotel policy','No smoking in guestrooms or indoor public areas'),
-            ('依實際服務時段設定','10:00–16:00 · 如需補充備品請聯繫櫃檯'),
-            ('Set to actual service hours','10:00–16:00 · Contact the front desk for extra amenities'),
-            ('若入住期間需要協助，歡迎與櫃檯聯繫。正式版本可放入電話、LINE、WhatsApp 或館內分機。','入住期間若需要協助，請撥館內分機 9 聯繫櫃檯。'),
-            ('For assistance during your stay, contact the front desk. The live version can include phone, LINE, WhatsApp or an in-house extension.','If you need assistance during your stay, dial extension 9 to reach the front desk.'),
-            ('DEMO 素材 · 正式專案將改用業者授權照片','DEMO HOTEL · 圖片與營運資訊皆為示範內容'),
-            ('DEMO ASSETS · Client version uses authorized property photos','DEMO HOTEL · Images and operating details are for demonstration only'),
-            ('LUME HOTEL · STANDARD HOSPITALITY DEMO · FICTIONAL PROPERTY','LUME HOTEL · HOSPITALITY GUEST GUIDE DEMO · FICTIONAL PROPERTY'),
-          ]
-          for old, new in pairs:
-              s = s.replace(old, new)
-
-          s, nav_removed = re.subn(r'<a href="#journal">.*?</a>', '', s, count=1)
-          s, section_removed = re.subn(r'<section class="section" id="journal">.*?</section>(?=<section class="section" id="wifi">)', '', s, count=1)
-          if nav_removed != 1 or section_removed != 1:
-              raise SystemExit('Journal removal failed')
-
-          p.write_text(s, encoding='utf-8')
-          PY
-
-      - name: Apply LUME v2.6 Wi-Fi QR Upgrade
-        shell: bash
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          import re
-
-          p = Path('staging/river-hotel/index.html')
-          s = p.read_text(encoding='utf-8')
-          s = s.replace('Real Hospitality Demo v2.5', 'Real Hospitality Demo v2.6')
-
-          wifi_css = r'''
-          /* LUME v2.6 Wi-Fi QR Upgrade */
-          .wifi-connect-grid{display:grid;gap:18px;margin-top:22px;align-items:stretch}
-          .wifi-qr-card{margin:0;padding:18px;border:1px solid var(--line);border-radius:20px;background:#fff;display:grid;place-items:center;text-align:center}
-          .wifi-qr-card img{display:block;width:min(100%,240px);height:auto;aspect-ratio:1/1;border-radius:14px}
-          .wifi-qr-card figcaption{margin-top:12px;font-size:12px;line-height:1.55;color:var(--muted)}
-          .wifi-details{padding:20px;border:1px solid var(--line);border-radius:20px;background:rgba(255,255,255,.92)}
-          .wifi-details .info{margin-bottom:10px}
-          .wifi-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
-          .wifi-actions .action-btn{min-height:44px}
-          .wifi-note{margin-top:16px;padding:13px 14px;border-radius:14px;background:var(--accent-soft);color:#80502f;font-size:12px;line-height:1.6}
-          @media(min-width:760px){.wifi-connect-grid{grid-template-columns:minmax(250px,.82fr) minmax(0,1.18fr)}}
-          @media(max-width:759px){
-            .wifi-connect-grid{gap:12px}
-            .wifi-qr-card{padding:16px}
-            .wifi-qr-card img{width:min(78vw,230px)}
-            .wifi-details{padding:17px}
-            .wifi-actions .action-btn{flex:1 1 calc(50% - 4px)}
-          }
-          @media(max-width:430px){.wifi-actions .action-btn{flex-basis:100%}}
-          '''
-          s = s.replace('</style>', wifi_css + '</style>', 1)
-
-          wifi_section = '''<section class="section" id="wifi"><div class="wrap"><div class="section-head"><a class="back" data-en="← Back to guide" data-zh="← 返回指南" href="#home">← 返回指南</a><div class="brand">WI‑FI</div></div><div class="eyebrow">WI‑FI</div><h2 data-en="Wi‑Fi" data-zh="Wi‑Fi">Wi‑Fi</h2><p class="lead" data-en="Scan the QR code to join Wi‑Fi. If you are viewing this page on the same phone, use the network details below instead." data-zh="掃描 QR Code 可直接加入 Wi‑Fi；若正使用同一支手機瀏覽本頁，請使用下方帳密連線。">掃描 QR Code 可直接加入 Wi‑Fi；若正使用同一支手機瀏覽本頁，請使用下方帳密連線。</p><div class="wifi-connect-grid"><figure class="wifi-qr-card"><img src="assets/lume-wifi-qr.svg" alt="LUME Guest Wi-Fi QR Code" width="240" height="240"><figcaption data-en="Scan to join LUME_GUEST_DEMO" data-zh="掃描直接連線 · LUME_GUEST_DEMO">掃描直接連線 · LUME_GUEST_DEMO</figcaption></figure><div class="wifi-details"><div class="info"><b>SSID</b><span id="wifi-ssid">LUME_GUEST_DEMO</span></div><div class="info"><b>Password</b><span id="wifi-pass">DEMO-ONLY-2026</span></div><div class="wifi-actions"><button class="action-btn" data-copy="LUME_GUEST_DEMO" data-en="Copy network name" data-zh="複製網路名稱" type="button">複製網路名稱</button><button class="action-btn primary" data-copy="DEMO-ONLY-2026" data-en="Copy password" data-zh="複製 Wi‑Fi 密碼" type="button">複製 Wi‑Fi 密碼</button></div><div class="wifi-note" data-en="Using this guide on the same phone? Copy the password above, then open your phone’s Wi‑Fi settings. Demo credentials only; they do not connect to a real network." data-zh="正用同一支手機看本頁？請複製上方密碼，再到手機 Wi‑Fi 設定連線。示範站使用假帳密，無法連線至真實網路。">正用同一支手機看本頁？請複製上方密碼，再到手機 Wi‑Fi 設定連線。示範站使用假帳密，無法連線至真實網路。</div></div></div></div></section>'''
-
-          s, count = re.subn(r'<section class="section" id="wifi">.*?</section>(?=<section class="section" id="stay">)', wifi_section, s, count=1)
-          if count != 1:
-              raise SystemExit('Wi-Fi section replacement failed')
-
-          p.write_text(s, encoding='utf-8')
-          PY
+          mkdir -p staging/river-hotel
+          cp themes/lume/index.html staging/river-hotel/index.html
+          cp themes/lume/styles.css staging/river-hotel/styles.css
 
       - name: Install Hospitality Core v2 dependencies
         run: python3 -m pip install -r core-v2/requirements.txt
 
       - name: Apply Hospitality Core v2 config
-        run: python3 core-v2/apply_config.py --config clients/lume/hotel-config.json --html staging/river-hotel/index.html
+        run: python3 core-v2/apply_config.py --config clients/lume/hotel-config.json --html staging/river-hotel/index.html --css staging/river-hotel/styles.css
 
       - name: Hospitality Core v2 QA
-        run: python3 core-v2/qa.py --config clients/lume/hotel-config.json --html staging/river-hotel/index.html
+        run: python3 core-v2/qa.py --config clients/lume/hotel-config.json --html staging/river-hotel/index.html --css staging/river-hotel/styles.css
 
       - name: Static QA
         shell: bash
         run: |
           python3 - <<'PY'
           from pathlib import Path
+
           root = Path('staging/river-hotel')
-          s = (root / 'index.html').read_text(encoding='utf-8')
+          html = (root / 'index.html').read_text(encoding='utf-8')
+          css = (root / 'styles.css').read_text(encoding='utf-8')
+          combined = html + '\n' + css
+
           expected_assets = [
-            'assets/lume-hero.webp',
-            'assets/lume-room.webp',
-            'assets/lume-breakfast.webp',
-            'assets/lume-business.webp',
-            'assets/lume-city.webp',
-            'assets/lume-wifi-qr.svg',
+              'assets/lume-hero.webp',
+              'assets/lume-room.webp',
+              'assets/lume-breakfast.webp',
+              'assets/lume-business.webp',
+              'assets/lume-city.webp',
+              'assets/lume-wifi-qr.svg',
           ]
+
           checks = {
-            'core v2 title': 'Hospitality Core v2' in s,
-            'mobile polish marker': 'LUME v2.4 Mobile Polish' in s,
-            'viewport meta': 'width=device-width' in s,
-            '44px touch targets': 'min-height:44px' in s,
-            'selected assets referenced': all(a in s for a in expected_assets),
-            'selected asset files exist': all((root / a).exists() for a in expected_assets),
-            'no Pexels placeholders': 'images.pexels.com' not in s,
-            'language switch': 'class="lang-float"' in s and 'data-lang="en"' in s,
-            'maps': s.count('google.com/maps/search') == 3,
-            'copy controls': 'data-copy="9"' in s and 'wifi-pass' in s,
-            'wifi QR': 'assets/lume-wifi-qr.svg' in s and 'wifi-ssid' in s and 'DEMO-ONLY-2026' in s,
-            'wifi same-phone fallback': '正用同一支手機看本頁？' in s,
-            'city disclosure': 'AI 情境示意' in s,
-            'journal removed': 'id=\"journal\"' not in s and 'href=\"#journal\"' not in s,
-            'guest copy cleaned': '正式版本可放入' not in s and '依實際館規設定' not in s and '依實際服務時段設定' not in s,
-            'no RIVER': 'RIVER HOTEL' not in s,
+              'core v2 title': 'Hospitality Core v2' in html,
+              'external stylesheet': 'styles.css' in html and '<style' not in html,
+              'mobile polish marker': 'LUME v2.4 Mobile Polish' in css,
+              'viewport meta': 'width=device-width' in html,
+              '44px touch targets': 'min-height:44px' in css,
+              'selected assets referenced': all(a in combined for a in expected_assets),
+              'selected asset files exist': all((root / a).exists() for a in expected_assets),
+              'no Pexels placeholders': 'images.pexels.com' not in combined,
+              'language switch': 'class="lang-float"' in html and 'data-lang="en"' in html,
+              'maps': html.count('google.com/maps/search') == 3,
+              'copy controls': 'data-copy="9"' in html and 'wifi-pass' in html,
+              'wifi QR': 'assets/lume-wifi-qr.svg' in html and 'wifi-ssid' in html and 'DEMO-ONLY-2026' in html,
+              'wifi same-phone fallback': '正用同一支手機看本頁？' in html,
+              'city disclosure': 'AI 情境示意' in html,
+              'journal removed': 'id="journal"' not in html and 'href="#journal"' not in html,
+              'guest copy cleaned': '正式版本可放入' not in html and '依實際館規設定' not in html and '依實際服務時段設定' not in html,
+              'no RIVER': 'RIVER HOTEL' not in html,
           }
-          for k, v in checks.items():
-              print(('PASS' if v else 'FAIL'), k)
+
+          for key, value in checks.items():
+              print(('PASS' if value else 'FAIL'), key)
+
           if not all(checks.values()):
               raise SystemExit(1)
           PY
