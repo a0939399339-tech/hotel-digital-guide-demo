@@ -278,6 +278,15 @@ jobs:
           p.write_text(s, encoding='utf-8')
           PY
 
+      - name: Install Hospitality Core v2 dependencies
+        run: python3 -m pip install -r core-v2/requirements.txt
+
+      - name: Apply Hospitality Core v2 config
+        run: python3 core-v2/apply_config.py --config clients/lume/hotel-config.json --html staging/river-hotel/index.html
+
+      - name: Hospitality Core v2 QA
+        run: python3 core-v2/qa.py --config clients/lume/hotel-config.json --html staging/river-hotel/index.html
+
       - name: Static QA
         shell: bash
         run: |
@@ -294,7 +303,7 @@ jobs:
             'assets/lume-wifi-qr.svg',
           ]
           checks = {
-            'v2.6 title': 'Real Hospitality Demo v2.6' in s,
+            'core v2 title': 'Hospitality Core v2' in s,
             'mobile polish marker': 'LUME v2.4 Mobile Polish' in s,
             'viewport meta': 'width=device-width' in s,
             '44px touch targets': 'min-height:44px' in s,
