@@ -13,7 +13,7 @@ args=ap.parse_args()
 cfg=json.loads(args.config.read_text(encoding="utf-8"))
 s=args.html.read_text(encoding="utf-8")
 css=args.css.read_text(encoding="utf-8") if args.css else ""
-compact_css=re.sub(r"\\s+","",css)
+compact_css=re.sub(r"\s+","",css)
 
 checks={
     "core title":"Hospitality Core v2" in s,
