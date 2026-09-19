@@ -11,6 +11,7 @@ on:
       - "clients/lume/hotel-config.json"
       - "core-v2/apply_config.py"
       - "core-v2/qa.py"
+      - "core-v2/validate_config.py"
       - "core-v2/requirements.txt"
       - "sales/index.html"
       - "sales/styles.css"
@@ -28,13 +29,17 @@ concurrency:
 
 jobs:
   deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Config preflight
+        run: python3 core-v2/validate_config.py --config clients/lume/hotel-config.json
 
       - name: Prepare LUME theme
         shell: bash

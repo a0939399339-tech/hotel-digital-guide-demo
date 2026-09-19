@@ -3,6 +3,15 @@ import argparse, json, re
 from pathlib import Path
 
 MODULES=("room","breakfast","facilities","city","wifi","stay","contact")
+DEMO_PROPERTY="LUME HOTEL"
+DEMO_ONLY_MARKERS=(
+    "LUME HOTEL",
+    "DEMO HOTEL",
+    "FICTIONAL PROPERTY",
+    "DEMO-ONLY-",
+    "虛構示範旅宿",
+    "示範站使用假帳密",
+)
 
 ap=argparse.ArgumentParser()
 ap.add_argument("--config",required=True,type=Path)
@@ -36,6 +45,12 @@ if cfg["modules"].get("wifi"):
     checks["wifi ssid"]=cfg["wifi"]["ssid"] in s
     checks["wifi qr ref"]=cfg["wifi"]["qr_asset"] in s
     checks["wifi qr file"]=(args.html.parent/cfg["wifi"]["qr_asset"]).exists()
+
+# Client builds must not inherit demo-only branding or fictional disclosure text.
+# The public LUME HOTEL demo is intentionally exempt.
+if cfg["property"]["name"].strip() != DEMO_PROPERTY:
+    for marker in DEMO_ONLY_MARKERS:
+        checks[f"no demo residue: {marker}"]=marker not in s
 
 ids=re.findall(r'\sid="([^"]+)"',s)
 checks["duplicate ids"]=len(ids)==len(set(ids))
