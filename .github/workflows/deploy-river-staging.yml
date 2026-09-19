@@ -12,6 +12,7 @@ on:
       - "core-v2/apply_config.py"
       - "core-v2/qa.py"
       - "core-v2/validate_config.py"
+      - "core-v2/capture_portfolio.py"
       - "core-v2/requirements.txt"
       - "sales/index.html"
       - "sales/styles.css"
@@ -139,6 +140,39 @@ jobs:
 
           if not all(checks.values()):
               raise SystemExit(1)
+          PY
+
+      - name: Install Chromium for portfolio capture
+        shell: bash
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends chromium
+
+      - name: Capture real mobile portfolio sections
+        shell: bash
+        run: |
+          python3 core-v2/capture_portfolio.py \
+            --html staging/river-hotel/index.html \
+            --output staging/river-hotel/portfolio-captures
+
+      - name: Portfolio capture QA
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          from PIL import Image
+
+          root = Path('staging/river-hotel/portfolio-captures')
+          expected = ['02-room.png','03-breakfast.png','04-city.png','05-wifi.png','06-stay.png']
+          for name in expected:
+              p = root / name
+              if not p.exists():
+                  raise SystemExit(f'FAIL missing portfolio capture: {name}')
+              with Image.open(p) as im:
+                  w, h = im.size
+                  print('PASS', name, w, h)
+                  if w < 800 or h < 500:
+                      raise SystemExit(f'FAIL low-resolution capture: {name} {w}x{h}')
           PY
 
       - name: Configure GitHub Pages
