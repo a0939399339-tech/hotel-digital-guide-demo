@@ -142,11 +142,12 @@ jobs:
               raise SystemExit(1)
           PY
 
-      - name: Install Chromium for portfolio capture
+      - name: Install Chromium and CJK fonts for portfolio capture
         shell: bash
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y --no-install-recommends chromium
+          sudo apt-get install -y --no-install-recommends chromium fonts-noto-cjk
+          fc-cache -f
 
       - name: Capture real mobile portfolio sections
         shell: bash
