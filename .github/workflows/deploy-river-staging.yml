@@ -5,10 +5,15 @@ on:
   push:
     branches: ["main"]
     paths:
-      - "themes/lume/**"
-      - "clients/lume/**"
-      - "core-v2/**"
-      - "sales/**"
+      # Runtime sources only; docs/README edits do not deploy.
+      - "themes/lume/index.html"
+      - "themes/lume/styles.css"
+      - "clients/lume/hotel-config.json"
+      - "core-v2/apply_config.py"
+      - "core-v2/qa.py"
+      - "core-v2/requirements.txt"
+      - "sales/index.html"
+      - "sales/styles.css"
       - "staging/river-hotel/assets/**"
       - ".github/workflows/deploy-river-staging.yml"
 
