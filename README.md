@@ -25,6 +25,13 @@ core-v2/
 
 staging/river-hotel/
 └─ assets/         # deploy-time demo imagery + generated Wi-Fi QR
+
+docs/
+├─ LUME_GOVERNANCE.md
+├─ RELEASE_CHECKLIST.md
+└─ CHANGE_REQUEST_TEMPLATE.md
+
+AGENTS.md           # concise guardrails for human / AI implementation work
 ```
 
 The active build path is:
@@ -39,6 +46,27 @@ The active build path is:
 
 The root-level `index.html`, `styles.css`, and `app.js` belong to the older generic demo and are not the canonical LUME render source. Legacy `staging/river-hotel/.v23` and `.v25` payloads are historical artifacts only.
 
+## Product governance
+
+LUME follows a strict product-governance model:
+
+- **LOCKED** — approved theme/brand system. No unsolicited redesign.
+- **CONFIGURABLE** — client/property content supplied through config.
+- **CUSTOM** — new modules, major redesigns and integrations require explicit scope approval.
+
+The governing rule is:
+
+> **No requirement, no change.**
+
+A content update is not permission to redesign the product.
+
+Required references:
+
+- [LUME Product Governance](docs/LUME_GOVERNANCE.md)
+- [Release Checklist](docs/RELEASE_CHECKLIST.md)
+- [Change Request Template](docs/CHANGE_REQUEST_TEMPLATE.md)
+- [Repository Agent Rules](AGENTS.md)
+
 ## Purpose
 - Portfolio / product demonstration
 - Reusable starter for future hotel projects
@@ -51,6 +79,10 @@ The root-level `index.html`, `styles.css`, and `app.js` belong to the older gene
 - Config-driven property data
 - Generated guest Wi-Fi QR asset
 - Generic sample data only
+
+## Portfolio integrity
+
+Product screenshots shown as implemented work must come from real implemented UI. Generated visual concepts may be used only when clearly labeled as concepts and must not be presented as production screenshots.
 
 ## Public repository boundary
 
